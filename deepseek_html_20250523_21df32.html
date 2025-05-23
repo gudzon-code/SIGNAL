@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bomb Display</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(145deg, #4e54c8, #8f94fb);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .bomb-btn.active {
+            background: linear-gradient(145deg, #FF416C, #FF4B2B);
+        }
+
+        .signal-btn-container {
+            margin: 20px 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        #signalBtn {
+            background: linear-gradient(145deg, #4CAF50, #8BC34A);
+            padding: 12px 20px;
+            font-size: 18px;
+        }
+
+        #signalBtn::before {
+            content: '🚀';
+            font-size: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(145deg, #8f94fb, #4e54c8);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s;
+        }
+
+        .cell.bomb::after {
+            content: '💣';
+            font-size: 30px;
+            animation: bombFloat 2s infinite ease-in-out;
+        }
+
+        @keyframes bombFloat {
+            0%, 100% {
+                transform: translateY(0) rotateX(0) rotateY(0);
+            }
+            25% {
+                transform: translateY(-5px) rotateX(5deg) rotateY(5deg);
+            }
+            50% {
+                transform: translateY(0) rotateX(0) rotateY(10deg);
+            }
+            75% {
+                transform: translateY(-5px) rotateX(5deg) rotateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="controls">
+            <button class="bomb-btn" onclick="setBombs(1)">1 Bomb</button>
+            <button class="bomb-btn" onclick="setBombs(3)">3 Bombs</button>
+            <button class="bomb-btn" onclick="setBombs(5)">5 Bombs</button>
+            <button class="bomb-btn" onclick="setBombs(7)">7 Bombs</button>
+        </div>
+
+        <div class="signal-btn-container">
+            <button id="signalBtn" onclick="showSignal()">GO TO SIGNAL</button>
+        </div>
+
+        <div class="board" id="board"></div>
+    </div>
+
+    <script>
+        const boardSize = 5;
+        let board = [];
+        let bombCount = 3; // По умолчанию 3 бомбы
+        let bombPositions = [];
+        const boardElement = document.getElementById('board');
+        const signalBtn = document.getElementById('signalBtn');
+        const bombButtons = document.querySelectorAll('.bomb-btn');
+
+        function createBoard() {
+            boardElement.innerHTML = '';
+            board = Array(boardSize).fill().map(() => Array(boardSize).fill(0));
+            bombPositions = [];
+            
+            // Create cells
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        function setBombs(bombs) {
+            // Убираем выделение со всех кнопок
+            bombButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Выделяем выбранную кнопку
+            event.target.classList.add('active');
+            
+            bombCount = bombs;
+            createBoard();
+        }
+
+        function showSignal() {
+            // Очищаем предыдущие бомбы
+            document.querySelectorAll('.cell.bomb').forEach(cell => {
+                cell.classList.remove('bomb');
+            });
+            
+            // Генерируем новые случайные позиции
+            bombPositions = [];
+            while (bombPositions.length < bombCount) {
+                const row = Math.floor(Math.random() * boardSize);
+                const col = Math.floor(Math.random() * boardSize);
+                const pos = `${row},${col}`;
+                
+                if (!bombPositions.includes(pos)) {
+                    bombPositions.push(pos);
+                    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                    cell.classList.add('bomb');
+                }
+            }
+        }
+
+        // Инициализация при загрузке
+        createBoard();
+        // Выделяем кнопку 3 бомбы по умолчанию
+        bombButtons[1].classList.add('active');
+    </script>
+</body>
+</html>
